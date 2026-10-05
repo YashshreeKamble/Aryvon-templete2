@@ -16,12 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const revealTargets = document.querySelectorAll(
-    '.home-intro-grid > *, .home-offer-heading, .home-offer-feature, .home-offer-small, .home-method-heading, .home-steps li, .home-final-cta-inner'
+    '.home-intro-grid > *, .home-offer-heading, .home-offer-feature, .home-offer-small, .home-method-heading, .home-steps li, .home-final-cta-inner, main > .page-hero .hero-box, main .section .heading, main .section .card, main .section .value-card, main .section .person, main .section .project-card, main .section .gallery-item, main .section .process-step, main .section .form-card, main .section .contact-item, main .section .stats, main .section .quote-box'
   );
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let revealObserver;
 
   if (revealTargets.length && !prefersReducedMotion && 'IntersectionObserver' in window) {
-    const revealObserver = new IntersectionObserver((entries, observer) => {
+    revealObserver = new IntersectionObserver((entries, observer) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add('is-visible');
@@ -39,6 +40,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const heroArt = document.querySelector('.home-hero-art');
   const supportsTilt = window.matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)').matches;
+
+  const tiltCards = document.querySelectorAll(
+    'main .card, main .value-card, main .person, main .project-card, main .gallery-item, main .process-step, main .home-offer-feature, main .home-offer-small'
+  );
+  const tiltSurfaces = document.querySelectorAll('main > .page-hero .hero-box, main .form-card, main .contact-item');
+
+  tiltCards.forEach((card) => card.classList.add('is-3d-card'));
+  tiltSurfaces.forEach((surface) => surface.classList.add('is-3d-surface'));
+
+  if (supportsTilt) {
+    tiltCards.forEach((card) => {
+      card.addEventListener('pointermove', (event) => {
+        const bounds = card.getBoundingClientRect();
+        const horizontalPosition = (event.clientX - bounds.left) / bounds.width;
+        const verticalPosition = (event.clientY - bounds.top) / bounds.height;
+
+        card.style.setProperty('--card-tilt-x', `${(0.5 - verticalPosition) * 5}deg`);
+        card.style.setProperty('--card-tilt-y', `${(horizontalPosition - 0.5) * 7}deg`);
+      });
+
+      card.addEventListener('pointerleave', () => {
+        card.style.removeProperty('--card-tilt-x');
+        card.style.removeProperty('--card-tilt-y');
+      });
+    });
+
+    tiltSurfaces.forEach((surface) => {
+      surface.addEventListener('pointermove', (event) => {
+        const bounds = surface.getBoundingClientRect();
+        const horizontalPosition = (event.clientX - bounds.left) / bounds.width;
+        const verticalPosition = (event.clientY - bounds.top) / bounds.height;
+
+        surface.style.setProperty('--surface-tilt-x', `${(0.5 - verticalPosition) * 3}deg`);
+        surface.style.setProperty('--surface-tilt-y', `${(horizontalPosition - 0.5) * 4}deg`);
+      });
+
+      surface.addEventListener('pointerleave', () => {
+        surface.style.removeProperty('--surface-tilt-x');
+        surface.style.removeProperty('--surface-tilt-y');
+      });
+    });
+  }
 
   if (heroArt && supportsTilt) {
     heroArt.addEventListener('pointermove', (event) => {
@@ -87,7 +130,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const createGalleryFigure = (photo) => {
     const figure = document.createElement('figure');
-    figure.className = 'gallery-item';
+    figure.className = 'gallery-item is-3d-card';
+
+    if (revealObserver) {
+      figure.setAttribute('data-reveal', '');
+      revealObserver.observe(figure);
+    }
 
     const image = document.createElement('div');
     image.className = 'gallery-image';
