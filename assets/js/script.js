@@ -15,6 +15,53 @@ document.addEventListener('DOMContentLoaded', () => {
     yearNode.textContent = new Date().getFullYear();
   }
 
+  const revealTargets = document.querySelectorAll(
+    '.home-intro-grid > *, .home-offer-heading, .home-offer-feature, .home-offer-small, .home-method-heading, .home-steps li, .home-final-cta-inner'
+  );
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (revealTargets.length && !prefersReducedMotion && 'IntersectionObserver' in window) {
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+
+    document.body.classList.add('motion-ready');
+    revealTargets.forEach((target) => {
+      target.setAttribute('data-reveal', '');
+      revealObserver.observe(target);
+    });
+  }
+
+  const heroArt = document.querySelector('.home-hero-art');
+  const supportsTilt = window.matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)').matches;
+
+  if (heroArt && supportsTilt) {
+    heroArt.addEventListener('pointermove', (event) => {
+      const bounds = heroArt.getBoundingClientRect();
+      const horizontalPosition = (event.clientX - bounds.left) / bounds.width;
+      const verticalPosition = (event.clientY - bounds.top) / bounds.height;
+
+      heroArt.style.setProperty('--hero-tilt-x', `${(0.5 - verticalPosition) * 7}deg`);
+      heroArt.style.setProperty('--hero-tilt-y', `${(horizontalPosition - 0.5) * 9}deg`);
+      heroArt.style.setProperty('--hero-glow-x', `${horizontalPosition * 100}%`);
+      heroArt.style.setProperty('--hero-glow-y', `${verticalPosition * 100}%`);
+      heroArt.classList.add('is-pointer-tilting');
+    });
+
+    heroArt.addEventListener('pointerleave', () => {
+      heroArt.style.removeProperty('--hero-tilt-x');
+      heroArt.style.removeProperty('--hero-tilt-y');
+      heroArt.style.removeProperty('--hero-glow-x');
+      heroArt.style.removeProperty('--hero-glow-y');
+      heroArt.classList.remove('is-pointer-tilting');
+    });
+  }
+
   const galleryGrid = document.getElementById('gallery-grid');
   const photoCatalog = [
     { title: 'Warehouse conveyor line', url: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=900&q=80' },
